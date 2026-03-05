@@ -22,7 +22,12 @@ export type Task = StatData['任务列表'][string];
 /**
  * 玩家信息
  */
-export type PlayerData = StatData['主角'];
+export type PlayerData = NonNullable<StatData['主角']>;
+
+/**
+ * 角色标识 (对应 schema 中的 主角, 主角1, 等)
+ */
+export type PlayerKey = '主角' | '主角1' | '主角2' | '主角3' | '主角4';
 
 /**
  * 命运点数

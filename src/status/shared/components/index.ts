@@ -1,6 +1,7 @@
 // 通用组件导出
 export { Ascension } from './Ascension';
 export { Card } from './Card';
+export { CharacterSelector } from './CharacterSelector';
 export { Collapse } from './Collapse';
 export { ConfirmModal } from './ConfirmModal';
 export { DeleteConfirmModal } from './DeleteConfirmModal';
@@ -15,10 +16,10 @@ export type { AscensionProps } from './Ascension/Ascension';
 export type { CardProps } from './Card/Card';
 export type { CollapseProps } from './Collapse/Collapse';
 export type {
-  ConfirmButtonVariant,
-  ConfirmModalButton,
-  ConfirmModalProps,
-  ConfirmModalRow,
+    ConfirmButtonVariant,
+    ConfirmModalButton,
+    ConfirmModalProps,
+    ConfirmModalRow
 } from './ConfirmModal';
 export type { DeleteConfirmModalProps } from './DeleteConfirmModal/DeleteConfirmModal';
 export type { EditableFieldProps } from './EditableField';
@@ -29,23 +30,18 @@ export type { ResourceBarProps } from './ResourceBar/ResourceBar';
 
 // 编辑器组件导出
 export {
-  KeyValueEditor,
-  NumberEditor,
-  SelectEditor,
-  TagEditor,
-  TextareaEditor,
-  TextEditor,
-  ToggleEditor,
+    KeyValueEditor,
+    NumberEditor,
+    SelectEditor,
+    TagEditor, TextEditor, TextareaEditor, ToggleEditor
 } from './editors';
 
 // 编辑器组件类型导出
 export type {
-  KeyValueEditorProps,
-  NumberEditorProps,
-  SelectEditorOption,
-  SelectEditorProps,
-  TagEditorProps,
-  TextareaEditorProps,
-  TextEditorProps,
-  ToggleEditorProps,
+    KeyValueEditorProps,
+    NumberEditorProps,
+    SelectEditorOption,
+    SelectEditorProps,
+    TagEditorProps, TextEditorProps, TextareaEditorProps, ToggleEditorProps
 } from './editors';
+

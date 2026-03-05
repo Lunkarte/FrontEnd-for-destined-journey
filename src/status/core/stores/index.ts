@@ -1,4 +1,6 @@
 // Store 导出入口
-export { useEditorSettingStore } from './editor-setting.store';
-export { useMvuDataStore } from './mvu-data.store';
-export { useThemeStore } from './theme.store';
+export * from './editor-setting.store';
+export * from './mvu-data.store';
+export * from './player.store';
+export * from './theme.store';
+

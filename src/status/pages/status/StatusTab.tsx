@@ -1,9 +1,11 @@
 import { FC, ReactNode } from 'react';
 import { useDeleteConfirm } from '../../core/hooks';
-import { useEditorSettingStore } from '../../core/stores';
+import { useEditorSettingStore, usePlayerStore } from '../../core/stores';
+import { PlayerData } from '../../core/types';
 import {
   Ascension,
   Card,
+  CharacterSelector,
   Collapse,
   DeleteConfirmModal,
   EditableField,
@@ -65,10 +67,11 @@ interface StatusEffectsProps {
   >;
   summary: string;
   editEnabled: boolean;
+  activePlayerKey: string;
   onDelete: (name: string) => void;
 }
 
-const StatusEffects: FC<StatusEffectsProps> = ({ effects, summary, editEnabled, onDelete }) => {
+const StatusEffects: FC<StatusEffectsProps> = ({ effects, summary, editEnabled, activePlayerKey, onDelete }) => {
   return (
     <Collapse title={renderCollapseTitle('状态效果', summary)} className={styles.statusTabCard}>
       <div className={styles.statusEffects}>
@@ -96,7 +99,7 @@ const StatusEffects: FC<StatusEffectsProps> = ({ effects, summary, editEnabled, 
                         <span className={styles.effectName}>{name}</span>
                         <div className={styles.effectEditHeaderMeta}>
                           <EditableField
-                            path={`主角.状态效果.${name}.类型`}
+                            path={`${activePlayerKey}.状态效果.${name}.类型`}
                             value={effect.类型 ?? '增益'}
                             type="select"
                             selectConfig={{ options: StatusEffectTypeOptions }}
@@ -104,7 +107,7 @@ const StatusEffects: FC<StatusEffectsProps> = ({ effects, summary, editEnabled, 
                           <div className={styles.effectMetaItem}>
                             <span className={styles.effectMetaLabel}>层数</span>
                             <EditableField
-                              path={`主角.状态效果.${name}.层数`}
+                              path={`${activePlayerKey}.状态效果.${name}.层数`}
                               value={effect.层数 ?? 1}
                               type="number"
                               numberConfig={{ min: 1, step: 1 }}
@@ -113,7 +116,7 @@ const StatusEffects: FC<StatusEffectsProps> = ({ effects, summary, editEnabled, 
                           <div className={styles.effectMetaItem}>
                             <span className={styles.effectMetaLabel}>剩余时间</span>
                             <EditableField
-                              path={`主角.状态效果.${name}.剩余时间`}
+                              path={`${activePlayerKey}.状态效果.${name}.剩余时间`}
                               value={effect.剩余时间 ?? ''}
                               type="text"
                             />
@@ -132,7 +135,7 @@ const StatusEffects: FC<StatusEffectsProps> = ({ effects, summary, editEnabled, 
                     <div className={styles.effectEditContent}>
                       <span className={styles.effectEditLabel}>效果</span>
                       <EditableField
-                        path={`主角.状态效果.${name}.效果`}
+                        path={`${activePlayerKey}.状态效果.${name}.效果`}
                         value={effect.效果 ?? ''}
                         type="textarea"
                       />
@@ -141,7 +144,7 @@ const StatusEffects: FC<StatusEffectsProps> = ({ effects, summary, editEnabled, 
                     <div className={styles.effectEditContent}>
                       <span className={styles.effectEditLabel}>来源</span>
                       <EditableField
-                        path={`主角.状态效果.${name}.来源`}
+                        path={`${activePlayerKey}.状态效果.${name}.来源`}
                         value={effect.来源 ?? ''}
                         type="text"
                       />
@@ -186,7 +189,8 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const editEnabled = useEditorSettingStore(state => state.editEnabled);
   const { deleteTarget, setDeleteTarget, handleDelete, cancelDelete, isConfirmOpen } =
     useDeleteConfirm();
-  const player = data.主角;
+  const { activePlayerKey } = usePlayerStore();
+  const player = ((data as any)[activePlayerKey] ?? data['主角'] ?? {}) as PlayerData;
 
   /**
    * 格式化基础信息显示值
@@ -215,7 +219,7 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
    */
   const renderBasicInfoField = (field: BasicInfoFieldConfig) => {
     const value = _.get(player, field.key);
-    const path = `主角.${field.key}`;
+    const path = `${activePlayerKey}.${field.key}`;
 
     // 非编辑模式下始终显示只读值
     if (!editEnabled || !field.editable) {
@@ -260,14 +264,14 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
         <span className={styles.resourceLabel}>{field.label}</span>
         <div className={styles.resourceEditors}>
           <EditableField
-            path={`主角.${field.currentKey}`}
+            path={`${activePlayerKey}.${field.currentKey}`}
             value={current}
             type="number"
             numberConfig={{ min: 0, max: max, step: 1 }}
           />
           <span className={styles.resourceSeparator}>/</span>
           <EditableField
-            path={`主角.${field.maxKey}`}
+            path={`${activePlayerKey}.${field.maxKey}`}
             value={max}
             type="number"
             numberConfig={{ min: 0, step: 1 }}
@@ -307,15 +311,17 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
   const statusEffectSummary = effectStats.total
     ? _.compact([
-        `共 ${effectStats.total}`,
-        effectStats.buff ? `Buff ${effectStats.buff}` : '',
-        effectStats.debuff ? `DeBuff ${effectStats.debuff}` : '',
-        effectStats.special ? `特殊 ${effectStats.special}` : '',
-      ]).join(' · ')
+      `共 ${effectStats.total}`,
+      effectStats.buff ? `Buff ${effectStats.buff}` : '',
+      effectStats.debuff ? `DeBuff ${effectStats.debuff}` : '',
+      effectStats.special ? `特殊 ${effectStats.special}` : '',
+    ]).join(' · ')
     : '无效果';
 
   return (
     <div className={styles.statusTab}>
+      <CharacterSelector />
+
       {/* 基础信息卡片 */}
       <Card title="基础信息" className={styles.statusTabCard}>
         <div className={styles.basicInfo}>
@@ -330,7 +336,7 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
             <div className={styles.attributesTitleEdit}>
               <span>可分配属性点:</span>
               <EditableField
-                path="主角.属性点"
+                path={`${activePlayerKey}.属性点`}
                 value={player.属性点 ?? 0}
                 type="number"
                 numberConfig={{ min: 0, step: 1 }}
@@ -351,7 +357,7 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
               <span className={styles.attributesLabel}>{key}</span>
               {editEnabled ? (
                 <EditableField
-                  path={`主角.属性.${key}`}
+                  path={`${activePlayerKey}.属性.${key}`}
                   value={value ?? 0}
                   type="number"
                   numberConfig={{ min: 0, max: 20, step: 1 }}
@@ -375,7 +381,7 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 <span className={styles.resourceLabel}>EXP</span>
                 <div className={styles.resourceEditors}>
                   <EditableField
-                    path="主角.累计经验值"
+                    path={`${activePlayerKey}.累计经验值`}
                     value={player.累计经验值 ?? 0}
                     type="number"
                     numberConfig={{
@@ -419,10 +425,11 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
         effects={statusEffects}
         summary={statusEffectSummary}
         editEnabled={editEnabled}
+        activePlayerKey={activePlayerKey}
         onDelete={name =>
           setDeleteTarget({
             type: '状态效果',
-            path: `主角.状态效果.${name}`,
+            path: `${activePlayerKey}.状态效果.${name}`,
             name,
           })
         }
@@ -433,7 +440,7 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
         title={renderCollapseTitle('登神长阶', ascensionSummary)}
         className={styles.statusTabCard}
       >
-        <Ascension data={player.登神长阶} editEnabled={editEnabled} pathPrefix="主角.登神长阶" />
+        <Ascension data={player.登神长阶} editEnabled={editEnabled} pathPrefix={`${activePlayerKey}.登神长阶`} />
       </Collapse>
 
       {/* 删除确认弹窗 */}

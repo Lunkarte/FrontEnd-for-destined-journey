@@ -1,9 +1,11 @@
 import { FC, ReactNode, useMemo, useState } from 'react';
 import { useDeleteConfirm } from '../../core/hooks';
-import { useEditorSettingStore } from '../../core/stores';
+import { useEditorSettingStore, usePlayerStore } from '../../core/stores';
+import { PlayerData } from '../../core/types';
 import { formatMoney, sortEntriesByQuality } from '../../core/utils';
 import {
   Card,
+  CharacterSelector,
   DeleteConfirmModal,
   EditableField,
   EmptyHint,
@@ -19,7 +21,7 @@ const ItemCategories = [
     label: '背包',
     icon: 'fa-solid fa-box',
     filterKey: '类型',
-    pathPrefix: '主角.背包',
+    pathSuffix: '背包',
     itemCategory: 'item' as const,
   },
   {
@@ -27,7 +29,7 @@ const ItemCategories = [
     label: '装备',
     icon: 'fa-solid fa-shield',
     filterKey: '位置',
-    pathPrefix: '主角.装备',
+    pathSuffix: '装备',
     itemCategory: 'equipment' as const,
   },
   {
@@ -35,7 +37,7 @@ const ItemCategories = [
     label: '技能',
     icon: 'fa-solid fa-wand-magic-sparkles',
     filterKey: '类型',
-    pathPrefix: '主角.技能',
+    pathSuffix: '技能',
     itemCategory: 'skill' as const,
   },
 ] as const;
@@ -56,7 +58,8 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const [activeCategory, setActiveCategory] = useState<CategoryId>('inventory');
   const [activeFilter, setActiveFilter] = useState<string>(ALL_FILTER);
 
-  const player = data.主角;
+  const { activePlayerKey } = usePlayerStore();
+  const player = ((data as any)[activePlayerKey] ?? data['主角'] ?? {}) as PlayerData;
 
   /** 获取当前类别配置 */
   const getCategoryConfig = (category: CategoryId) => {
@@ -143,7 +146,7 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
           <i className="fa-solid fa-coins" />
           {editEnabled ? (
             <EditableField
-              path="主角.金钱"
+              path={`${activePlayerKey}.金钱`}
               value={money}
               type="number"
               numberConfig={{ step: 1 }}
@@ -182,12 +185,12 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
             data={item}
             titleSuffix={getTitleSuffix(item)}
             editEnabled={editEnabled}
-            pathPrefix={`${config.pathPrefix}.${name}`}
+            pathPrefix={`${activePlayerKey}.${config.pathSuffix}.${name}`}
             itemCategory={config.itemCategory}
             onDelete={() =>
               setDeleteTarget({
                 type: config.label,
-                path: `${config.pathPrefix}.${name}`,
+                path: `${activePlayerKey}.${config.pathSuffix}.${name}`,
                 name,
               })
             }
@@ -240,6 +243,8 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
   return (
     <div className={styles.itemsTab}>
+      <CharacterSelector />
+
       {/* 货币显示 */}
       <Card className={styles.itemsTabCurrency}>{renderCurrency()}</Card>
 
